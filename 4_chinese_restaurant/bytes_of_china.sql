@@ -67,3 +67,47 @@ WHERE table_name = 'review' ;
 
 -- Section 2: Create Tables and Primary Keys
 -- -- Define Relationships and Foreign Keys
+
+-- -- ONE TO ONE RELATIONSHIP
+-- -- Restaurant - Address
+ALTER TABLE restaurant 
+ADD address_id INTEGER UNIQUE;
+
+ALTER TABLE restaurant
+ADD CONSTRAINT fk_restaurant_address 
+FOREIGN KEY (address_id) 
+REFERENCES address(id) ;
+
+-- -- Validate that primary keys exist for restaurant table
+SELECT constraint_name, table_name,column_name 
+FROM information_schema.key_column_usage 
+WHERE table_name = 'restaurant' ;
+
+-- -- ONE TO MANY RELATIONSHIP
+-- -- Restaurant - Reviews
+ALTER TABLE review
+ADD restaurant_id INTEGER;
+
+ALTER TABLE review
+ADD CONSTRAINT fk_review_restaurant 
+FOREIGN KEY (restaurant_id)
+REFERENCES restaurant(id);
+
+-- -- Validate that primary keys exist for restaurant table
+SELECT constraint_name, table_name,column_name 
+FROM information_schema.key_column_usage 
+WHERE table_name = 'review' ;
+
+
+-- -- MANY TO MANY RELATIONSHIP
+-- -- Category - Dish
+CREATE TABLE categories_dishes(
+    category_id char(2) REFERENCES category(id),
+    dish_id integer REFERENCES dish(id),
+    PRIMARY KEY (category_id, dish_id)
+);
+
+-- -- Validate that primary keys exist for dish table
+SELECT constraint_name, table_name, column_name 
+FROM information_schema.key_column_usage 
+WHERE table_name = 'dish' OR table_name = 'category' ;
