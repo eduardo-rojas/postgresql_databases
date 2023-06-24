@@ -1,5 +1,7 @@
 -- Section 1: Create Tables and Primary Keys
--- -- Create restaurant and address tables
+
+/* 1.1. Create restaurant and address tables */
+
 CREATE TABLE restaurant(
     id integer primary key,
     name varchar(20), 
@@ -18,25 +20,28 @@ CREATE TABLE address(
     google_map_link varchar(150)
 );
 
--- -- Validate that primary keys exist for restaurant and address tables
+/* 1.2. Validate that primary keys exist 
+for restaurant and address tables */
+
 SELECT constraint_name, column_name 
 FROM information_schema.key_column_usage 
 WHERE table_name = 'restaurant' 
 AND 
 table_name = 'address';
 
--- --Create table for menu categories
+/* 1.3. Create table for menu categories */
 CREATE TABLE category(
     id char(2) primary key, 
     name varchar(25),
     description varchar(250)
 );
--- -- Validate that primary keys exist for category table
+
+/* 1.4. Validate that primary keys exist for category table */
 SELECT constraint_name, column_name 
 FROM information_schema.key_column_usage 
 WHERE table_name = 'category' ;
 
--- --Create table for dishes
+/* 1.5. Create table for dishes */
 CREATE TABLE dish(
     id integer primary key, 
     name varchar(50),
@@ -44,12 +49,12 @@ CREATE TABLE dish(
     hot_and_spicy boolean
 );
 
--- -- Validate that primary keys exist for category table
+/* 1.6. Validate that primary keys exist for category table */
 SELECT constraint_name, column_name 
 FROM information_schema.key_column_usage 
 WHERE table_name = 'dish' ;
 
--- --Create table for customer reviews
+/* 1.7. Create table for customer reviews */
 CREATE TABLE review(
     id integer primary key,
     rating decimal,
@@ -57,17 +62,17 @@ CREATE TABLE review(
     date date
 );
 
--- -- Validate that primary keys exist for category table
+/* 1.8. Validate that primary keys exist for category table */
 SELECT constraint_name, column_name 
 FROM information_schema.key_column_usage 
 WHERE table_name = 'review' ;
 
 
--- Section 2: Create Tables and Primary Keys
--- -- Define Relationships and Foreign Keys
+/*Section 2: Create Tables and Primary Keys
+Define Relationships and Foreign Keys */
 
--- -- ONE TO ONE RELATIONSHIP
--- -- Restaurant - Address
+/* 2.1. ONE TO ONE RELATIONSHIP
+Restaurant - Address */
 ALTER TABLE address 
 ADD restaurant_id INTEGER UNIQUE;
 
@@ -76,13 +81,13 @@ ADD CONSTRAINT fk_restaurant_address
 FOREIGN KEY (restaurant_id) 
 REFERENCES restaurant(id) ;
 
--- -- Validate that primary keys exist for restaurant table
+/* 2.2. Validate that primary keys exist for restaurant table */
 SELECT constraint_name, table_name,column_name 
 FROM information_schema.key_column_usage 
 WHERE table_name = 'restaurant' ;
 
--- -- ONE TO MANY RELATIONSHIP
--- -- Restaurant - Reviews
+/* 2.3. ONE TO MANY RELATIONSHIP
+Restaurant - Reviews */
 ALTER TABLE review
 ADD restaurant_id INTEGER;
 
@@ -91,14 +96,14 @@ ADD CONSTRAINT fk_review_restaurant
 FOREIGN KEY (restaurant_id)
 REFERENCES restaurant(id);
 
--- -- Validate that primary keys exist for restaurant table
+/* 2.4 Validate that primary keys exist for restaurant table */
 SELECT constraint_name, table_name,column_name 
 FROM information_schema.key_column_usage 
 WHERE table_name = 'review' ;
 
 
--- -- MANY TO MANY RELATIONSHIP
--- -- Category - Dish
+/*2.5  MANY TO MANY RELATIONSHIP
+Category - Dish */
 CREATE TABLE categories_dishes(
     category_id char(2) REFERENCES category(id),
     dish_id integer REFERENCES dish(id),
@@ -106,13 +111,12 @@ CREATE TABLE categories_dishes(
     PRIMARY KEY (category_id, dish_id)
 );
 
--- -- Validate that primary keys exist for dish table
+/* 2.6 Validate that primary keys exist for dish table */
 SELECT constraint_name, table_name, column_name 
 FROM information_schema.key_column_usage 
 WHERE table_name = 'dish' OR table_name = 'category' ;
 
 
--- -- Section 3: Insert Sample Data
 /* 
  *--------------------------------------------
  Insert values for restaurant
@@ -308,5 +312,103 @@ INSERT INTO categories_dishes VALUES (
   17.95
 );
 
+--Section 4: Make Sample Queries
 
--- -- Section 4: Make Sample Queries
+/*1. Type in a query that displays 
+the restaurant name, its address 
+(street number and name) and telephone number. */
+
+SELECT restaurant.name AS "Restaurant Name",
+       address.street_number AS "Street Number",
+       address.street_name AS "Street Name",
+       restaurant.telephone AS "Telephone"
+FROM
+      restaurant, address ;
+
+/* 4.2.write a query to get the best 
+rating the restaurant ever received. 
+Display the rating as best_rating.  */
+/*a) Solution 1*/
+SELECT MAX(rating) AS "best_rating" FROM review;
+/*b) Solution 2*/
+SELECT rating AS "best_rating" 
+FROM review
+ORDER BY rating DESC LIMIT 5;
+
+
+/* 4.3. Write a query to display a dish name,
+ its price and category sorted by the dish name.
+ You should get 8 rows of results. */
+SELECT  dish.name AS "dish_name",
+        categories_dishes.price AS "price",
+        category.name AS "category"
+FROM  dish, categories_dishes, category
+WHERE dish.id = categories_dishes.dish_id
+AND category.id = categories_dishes.category_id
+ORDER BY dish_name
+LIMIT 8;
+
+
+/* 4.4.  Instead of sorting the results by dish name, 
+type in a new query to display the results
+sorted by category name.*/
+SELECT category.name AS "category",
+        dish.name AS "dish_name",
+        categories_dishes.price AS "price"
+FROM category, dish, categories_dishes
+WHERE category.id = categories_dishes.category_id
+AND dish.id = categories_dishes.dish_id
+ORDER BY category.name
+LIMIT 8;
+
+
+/* 4.5. Type a query that displays all
+the spicy dishes, their prices and category. 
+You should get 3 rows of results.*/
+select  d.name,
+        c.name,
+        cd.price
+FROM dish AS d , category AS c, categories_dishes AS cd
+WHERE d.hot_and_spicy = 'true'
+AND d.id = cd.dish_id
+AND cd.category_id = c.id;
+
+
+/* 4.6 Write a query that displays the dish_id
+ and COUNT(dish_id) as dish_count from the 
+ categories_dishes table.  */
+ SELECT dish_id , COUNT(dish_id) AS "dish_count"
+ FROM categories_dishes 
+ GROUP BY dish_id;
+
+
+ /* 4.7 Write a query that displays the dish_id
+ and COUNT(dish_id) as dish_count from the 
+ categories_dishes table.  */
+ SELECT dish_id , COUNT(dish_id) AS "dish_count"
+ FROM categories_dishes 
+ GROUP BY dish_id
+HAVING COUNT(dish_id) > 1;
+
+
+/* 4.8 Write a query that incorporates multiple 
+tables that display the dish name as dish_name 
+and dish count as dish_count. */
+ SELECT d.name , 
+        COUNT(cd.dish_id) AS "dish_count"
+ FROM dish AS d, 
+      categories_dishes AS cd 
+ GROUP BY d.name 
+ HAVING COUNT(dish_id) > 1;
+
+ /* 4.9  Write a query that displays 
+the best rating as 
+best_rating and the description too.*/
+SELECT  MAX(rating) AS "best_rating",
+        description,
+FROM 
+        review 
+WHERE 
+        MAX(rating) = ( SELECT
+        MAX(rating) FROM review
+        );
