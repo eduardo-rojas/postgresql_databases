@@ -40,7 +40,6 @@ CREATE INDEX orders_book_id_idx
 ON orders(book_id);
 
 
-
 /* 
     SECTION 3: Is a Multicolumn Index good here?
 */
@@ -67,5 +66,66 @@ book titles, and the number of copies sold to see if it is worth the time
 and money in translating these books. Create an index to help speed 
 up searching for this information.
 */
-CREATE INDEX orders_language_title_sales_idx
-ON books(original_language, title, sales_in_millions);
+CREATE INDEX language_title_sales_idx 
+ON books (original_language, title, sales_in_millions);
+
+
+
+/*
+  3.4 Now that you have your index let’s repeat our process in tasks 1 and 2 
+and compare the runtime and size with our index in place. 
+*/
+EXPLAIN ANALYZE  
+SELECT original_language, title, sales_in_millions 
+FROM books 
+WHERE original_language = 'French';
+
+/*
+    SECTION 4:Clean Up
+*/
+
+/*
+    4.1 Delete the multicolumn index we created above to make it so inserts into the books will run quickly.
+*/
+DROP INDEX language_title_sales_idx;
+
+
+/*
+    SECTION 5: Bulk Insert
+*/
+
+/* 
+    4.2  The company you work for has bought out a competitor bookstore. You will need to load all of their orders 
+into your orders table with a bulk copy. Let’s see how long this bulk insert will take. 
+*/
+SELECT NOW();
+
+\COPY orders FROM 'orders_add.txt'
+DELIMITER ',' CSV HEADER;
+
+SELECT NOW();
+
+
+/* 
+    4.3 The company you work for has bought out a competitor bookstore. You will need to load all of their orders 
+into your orders table with a bulk copy. Let’s see how long this bulk insert will take. 
+*/
+DROP INDEX orders_customer_id_idx;
+DROP INDEX orders_book_id_idx;
+DROP INDEX language_title_sales_idx;
+
+SELECT NOW();
+
+\COPY orders FROM 'orders_add.txt'
+DELIMITER ',' CSV HEADER;
+
+
+SELECT NOW();
+
+/* 
+    SECTION 5: Do you know what to do?
+*/
+
+/* 
+
+*/
